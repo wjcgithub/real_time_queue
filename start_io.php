@@ -5,6 +5,7 @@ use Workerman\Lib\Timer;
 use PHPSocketIO\SocketIO;
 
 include __DIR__ . '/vendor/autoload.php';
+include __DIR__ . '/services/BeansTalkdService.php';
 
 // 全局数组保存uid在线数据
 $uidConnectionMap = array();
@@ -12,6 +13,8 @@ $uidConnectionMap = array();
 $last_online_count = 0;
 // 记录最后一次广播的在线页面数
 $last_online_page_count = 0;
+//beanstalkd链接
+$bsObj = new BeanstalkdService();
 
 // PHPSocketIO服务
 $sender_io = new SocketIO(2120);
@@ -99,6 +102,13 @@ $sender_io->on('workerStart', function(){
             $last_online_count = $online_count_now;
             $last_online_page_count = $online_page_count_now;
         }
+
+        //队列统计
+        global $bsObj;
+        $tubArr = $bsObj->getTubeList();
+        $tubehtml = $bsObj->tubsArrToHtml($tubArr);
+        $sender_io->emit('update_tubes_info', $tubehtml);
+
     });
 });
 
