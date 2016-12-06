@@ -18,45 +18,6 @@ $bsObj = new BeanstalkdService();
 
 // PHPSocketIO服务
 $sender_io = new SocketIO(2120);
-// 客户端发起连接事件时，设置连接socket的各种事件回调
-$sender_io->on('connection', function($socket){
-    // 当客户端发来登录事件时触发
-    $socket->on('login', function ($uid)use($socket){
-        global $uidConnectionMap, $last_online_count, $last_online_page_count;
-        // 已经登录过了
-        if(isset($socket->uid)){
-            return;
-        }
-        // 更新对应uid的在线数据
-        $uid = (string)$uid;
-        if(!isset($uidConnectionMap[$uid]))
-        {
-            $uidConnectionMap[$uid] = 0;
-        }
-        // 这个uid有++$uidConnectionMap[$uid]个socket连接
-        ++$uidConnectionMap[$uid];
-        // 将这个连接加入到uid分组，方便针对uid推送数据
-        $socket->join($uid);
-        $socket->uid = $uid;
-        // 更新这个socket对应页面的在线数据
-        $socket->emit('update_online_count', "当前<b>{$last_online_count}</b>人在线，共打开<b>{$last_online_page_count}</b>个页面");
-    });
-    
-    // 当客户端断开连接是触发（一般是关闭网页或者跳转刷新导致）
-    $socket->on('disconnect', function () use($socket) {
-        if(!isset($socket->uid))
-        {
-             return;
-        }
-        global $uidConnectionMap, $sender_io;
-        // 将uid的在线socket数减一
-        if(--$uidConnectionMap[$socket->uid] <= 0)
-        {
-            unset($uidConnectionMap[$socket->uid]);
-        }
-    });
-});
-
 // 当$sender_io启动后监听一个http端口，通过这个端口可以给任意uid或者所有uid推送数据
 $sender_io->on('workerStart', function(){
     // 监听一个http端口
@@ -92,22 +53,11 @@ $sender_io->on('workerStart', function(){
 
     // 一个定时器，定时向所有uid推送当前uid在线数及在线页面数
     Timer::add(1, function(){
-        global $uidConnectionMap, $sender_io, $last_online_count, $last_online_page_count;
-        $online_count_now = count($uidConnectionMap);
-        $online_page_count_now = array_sum($uidConnectionMap);
-        // 只有在客户端在线数变化了才广播，减少不必要的客户端通讯
-        if($last_online_count != $online_count_now || $last_online_page_count != $online_page_count_now)
-        {
-            $sender_io->emit('update_online_count', "当前<b>{$online_count_now}</b>人在线，共打开<b>{$online_page_count_now}</b>个页面");
-            $last_online_count = $online_count_now;
-            $last_online_page_count = $online_page_count_now;
-        }
-
-        //队列统计
-        global $bsObj;
+        global $sender_io, $bsObj;
         $tubArr = $bsObj->getTubeList();
         $tubehtml = $bsObj->tubsArrToHtml($tubArr);
         $sender_io->emit('update_tubes_info', $tubehtml);
+        $sender_io->emit('update_tubes_graph', $tubArr);
 
     });
 });
