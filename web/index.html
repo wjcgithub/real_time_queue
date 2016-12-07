@@ -28,7 +28,7 @@
         // 指定图表的配置项和数据
         var option = {
             title: {
-                text: '堆叠区域图'
+                text: '队列实时统计图(执行完的任务数,基于beanstalkd+echarts)'
             },
             tooltip : {
                 trigger: 'axis'
@@ -76,7 +76,7 @@
                     queuenameArr[tubes[i].name]=tubes[i].name;
                 }
                 if(array_key_exists(tubes[i].name, tmpoptions)){
-                    if(tmpoptions[tubes[i].name].data.length<120){
+                    if(tmpoptions[tubes[i].name].data.length<300){
                         array_push(tmpoptions[tubes[i].name].data, tubes[i].total);
                     }else{
                         array_shift(tmpoptions[tubes[i].name].data);

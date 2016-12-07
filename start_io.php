@@ -58,7 +58,6 @@ $sender_io->on('workerStart', function(){
         $tubehtml = $bsObj->tubsArrToHtml($tubArr);
         $sender_io->emit('update_tubes_info', $tubehtml);
         $sender_io->emit('update_tubes_graph', $tubArr);
-
     });
 });
 
