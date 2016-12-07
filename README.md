@@ -4,7 +4,7 @@ beanstalk ＋　echarts实现的队列实时统计图
 
 效果截图
 ======
-![web-msg-sender-demo]()
+![queue_runtime](https://github.com/wjcgithub/web-msg-sender/blob/master/web/img/queue.png)
 
 后端服务启动停止
 ======
